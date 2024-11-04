@@ -23,6 +23,19 @@ def load_data():
         return "Database connected successfully."
     except sqlite3.Error as e:
         return f"Failed to connect to the database: {e}"
+# Upload and Convert Excel Data to SQLite Database 
+@st.cache 
+def convert_excel_to_sqlite(uploaded_file):
+    # Load the Excel file into the pandas dataframe 
+    df = pd.read_excel(uploaded_file)
+    
+    # Create SQLite database 
+    conn = sqlite3.connect("UserUploadedData.db")
+    df.to_sql("RegisteredAdvisors", conn, if_exists="replace", index=False)
+    conn.close()
+    return "Database created succesfully"
+
+
 
 # Step 1: Extract text from each page in the PDF
 @st.cache
@@ -115,14 +128,24 @@ def query_openai_part1(text, question):
 
 # Step 2: Generate SQL query based on Part 1 answer
 def generate_sql_query(question, part1_answer):
-    # Fetch column names from the database
-    all_columns = list(pd.read_sql_query("SELECT * FROM RegisteredAdvisors LIMIT 0", sqlite3.connect("RegisteredAdvisors.db")).columns)
-    # Format column names as a comma-separated list
-    formatted_columns = ", ".join(all_columns)
+    conn = sqlite3.connect("UserUploadedData.db")
+    df = pd.read_sql_query("SELECT * FROM RegisteredAdvisors LIMIT 5", conn)
+    conn.close()
+
+    # Prepare column names with sample data
+    column_samples = {}
+    for column in df.columns:
+        column_samples[column] = df[column].dropna().unique().tolist()[:5]
+
+    # Format column samples as a string for context
+    formatted_column_samples = "\n".join(
+        f"{col}: {samples}" for col, samples in column_samples.items()
+    )   
+
     part2_system_message = f"""
         You are a SQL assistant with knowledge of the column structure of a financial advisors database.
-        Here is a list of column names:
-        {', '.join(map(str, formatted_columns))}
+        Here is a list of column names and sample data from each column:
+        {', '.join(map(str, formatted_column_samples))}
 
         Mapping Examples:
         - "Item 1.A" maps to "1A".
@@ -146,8 +169,9 @@ def generate_sql_query(question, part1_answer):
             - For aggregation: SELECT AVG([column]) FROM RegisteredAdvisors WHERE [conditions if any] (if the question asks for averages).
             - Apply similar structures for SUM, COUNT, and any other relevant SQL functionality.
             - If the question is asking for a specific company, include a WHERE clause to filter by the company name. In the database, all company names are in all caps in the 'Primary Business Name' column.
-        5. Use the appropriate SQL format based on the type of information requested and return the generated SQL query.
-        6. Sometimes, part 1 may return no information. In such cases, use the original question to identify the relevant columns directly from the database or 
+        5. Use the sample data to identify the correct SQL function and conditions: apply SUM, AVG, or COUNT for numerical data, and use exact matches for categorical data like "Y" for yes and "N" for no in WHERE clauses.  
+        6. Use the appropriate SQL format based on the type of information requested and return the generated SQL query.
+        7. Sometimes, part 1 may return no information. In such cases, use the original question to identify the relevant columns directly from the database or 
             you may be able to create the SQL query without the need for specific columns. For example, if the question asks for the total number of registered advisors,
             you can directly return the SQL query `SELECT COUNT(*) FROM RegisteredAdvisors.db;`.
 
@@ -220,6 +244,14 @@ st.title("SEC File ADV Chatbot")
 st.header("Part 1: Load Database and Extract Text from PDF")
 db_status = load_data()
 st.success(db_status)
+
+# Load the uploaded data and create the SQLite database
+st.header("Upload your advisor data (.xlsx) file")
+uploaded_file = st.file_uploader("Choose a file", type="xlsx")
+
+if uploaded_file:
+    db_status = convert_excel_to_sqlite(uploaded_file)
+    st.success(db_status)
 
 
 # Define PDF path
@@ -1621,7 +1653,7 @@ question = st.text_input("Enter your question about the document:")
 if st.button("Run Part 1"):
     if question and extracted_text:
         st.session_state.part1_answer = query_openai_part1(extracted_text, question)
-st.text_area("Part 1 Answer (Relevant Items from Form ADV)", st.session_state.part1_answer, height=200)
+st.text_area("Part 1 Answer (Relevant Items from Form ADV)", st.session_state.part1_answer, height=200, disabled=True)
 
 # Editable Part 1 answer confirmation for Part 2
 st.header("Part 2: Generate SQL Query")
@@ -1629,7 +1661,7 @@ confirmed_part1_answer = st.text_area("Confirm or Edit Part 1 Answer", st.sessio
 if st.button("Run Part 2"):
     if confirmed_part1_answer:
         st.session_state.sql_query = generate_sql_query(question, confirmed_part1_answer)
-st.text_area("Generated SQL Query", st.session_state.sql_query, height=100)
+st.text_area("Generated SQL Query", st.session_state.sql_query, height=100, disabled=True)
 
 # Editable SQL query confirmation for Part 3
 st.header("Part 3: Execute SQL Query")
