@@ -1,0 +1,7 @@
+streamlit
+openai
+pandas
+sqlite3-binary
+pytesseract
+pdf2image
+python-dotenv
