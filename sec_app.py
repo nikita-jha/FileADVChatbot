@@ -1649,7 +1649,26 @@ if "sql_result" not in st.session_state:
     st.session_state.sql_result = ""
 
 # Input question for Part 1
-question = st.text_input("Enter your question about the document:")
+# Define sample questions for the dropdown
+sample_questions = [
+    "What is the total number of assets under management of the investment advisers, in trillion dollars?",
+    "What is the number of advisers with each more than one million clients?",
+    "What fraction of advisers provide portfolio management services to their clients?",
+    "What is the total assets under custody of advisers, in trillion dollars?",
+    "What fraction of advisers have custody of clients' cash or securities?",
+    "What is the total number of small registered investment advisers?",
+    "How many employees (both full-time and part-time) does American Investors Co have?",
+    "How many advisers have over 60% of clients that are non-United States persons?",
+    "What percentage of advisers participate in a wrap fee program?",
+    "What is the total number of advisers who are compensated for their services with commissions?"
+]
+selected_sample = st.selectbox("Choose a sample question or type your own:", ["Type your own question..."] + sample_questions)
+
+# Determine if the user selected a sample question or wants to type their own
+question = st.text_input("Enter your question about the document:",
+                         value=selected_sample if selected_sample != "Type your own question..." else "",
+                         placeholder="Type your question here...")
+
 if st.button("Run Part 1"):
     if question and extracted_text:
         st.session_state.part1_answer = query_openai_part1(extracted_text, question)
