@@ -3,6 +3,8 @@
 ## Overview
 The **SEC Form ADV Chatbot** is a comprehensive, automated tool designed to interact with users and answer questions about financial advisory information contained in SEC Form ADV filings. Built with **Streamlit** for a web interface, the chatbot leverages **OpenAI’s language model** to interpret user questions, retrieve relevant data from a structured SQLite database, and generate contextually accurate answers.
 
+SEC Page for File ADV (Includes Historical Data and Full Form): https://www.sec.gov/data-research/sec-markets-data/information-about-registered-investment-advisers-exempt-reporting-advisers
+
 ## Table of Contents
 1. [Project Architecture](#project-architecture)
 2. [Components](#components)
