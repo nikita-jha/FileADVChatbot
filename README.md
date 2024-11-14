@@ -84,7 +84,7 @@ The chatbot uses OpenAI’s language model to format the SQL query output into a
    OAI=<your_openai_api_key>
 6. **Run the Streamlit App**
    ```bash
-   streamlit run app.py
+   streamlit run sec_app.py
 
 ## Usage
 
