@@ -31,6 +31,9 @@ The system is structured in modular components that allow for **PDF text extract
 - **Database Interaction**: Connects to a SQLite database containing structured data from the Form ADV, which is created from an uploaded Excel file.
 - **Answer Synthesis**: OpenAI GPT-4-o generates natural language answers based on SQL query results to provide user-friendly responses.
 
+<img width="1040" alt="Screenshot 2024-12-02 at 1 17 21 PM" src="https://github.com/user-attachments/assets/7a1782f5-53d2-42c7-a512-49066056a43e">
+
+
 ---
 
 ## Components
